@@ -1,0 +1,75 @@
+# Sample workflow for building and deploying a Hugo site to GitHub Pages
+name: Deploy Hugo site to Pages
+
+on:
+  # 触发条件
+  push: # 当代码被推送到以下分支时触发
+    branches:
+      - main # 主分支
+
+  workflow_dispatch: # 允许从GitHub的Actions选项卡手动触发此工作流
+
+permissions:
+  # 设置GITHUB_TOKEN的权限，以允许部署到GitHub Pages
+  contents: read # 读取仓库内容
+  pages: write # 写入GitHub Pages的权限
+  id-token: write # 写入ID令牌的权限
+
+concurrency:
+  # 允许一个并发部署，跳过排队中的运行，但不取消正在进行的运行
+  group: "pages" # 部署组名称
+  cancel-in-progress: false # 不取消正在进行中的运行
+
+defaults:
+  run:
+    shell: bash # 默认使用bash作为脚本运行环境
+
+jobs:
+  # 构建任务
+  build:
+    runs-on: ubuntu-latest # 在最新版本的Ubuntu环境中运行
+    env:
+      HUGO_VERSION: 0.133.0 # 定义Hugo的版本
+    steps:
+      - name: Install Hugo CLI # 安装Hugo命令行工具
+        run: |
+          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
+          && sudo dpkg -i ${{ runner.temp }}/hugo.deb          
+      - name: Install Dart Sass # 安装Dart Sass处理Sass文件
+        run: sudo snap install dart-sass
+      - name: Checkout # 检出代码
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive # 递归检出子模块
+          fetch-depth: 0 # 完整检出
+      - name: Setup Pages # 配置GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Install Node.js dependencies # 安装Node.js依赖
+        run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
+      - name: Build with Hugo # 使用Hugo构建网站
+        env:
+          HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
+          HUGO_ENVIRONMENT: production
+          TZ: America/Los_Angeles
+        run: |
+          hugo \
+            --gc \
+            --minify \
+            --baseURL "${{ steps.pages.outputs.base_url }}/"          
+      - name: Upload artifact # 上传构建产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+  # 部署任务
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest # 在最新版本的Ubuntu环境中运行
+    needs: build # 依赖构建任务完成
+    steps:
+      - name: Deploy to GitHub Pages # 部署到GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
