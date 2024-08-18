@@ -1,4 +1,4 @@
-baseurl: https://blog.lulaide.com
+baseurl: https://lulaide.github.io
 languageCode: en
 theme: hugo-theme-stack
 paginate: 5
