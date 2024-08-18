@@ -2,12 +2,14 @@
 name: Deploy Hugo site to Pages
 
 on:
-  # 触发条件
-  push: # 当代码被推送到以下分支时触发
+  push:
     branches:
-      - main # 主分支
-
-  workflow_dispatch: # 允许从GitHub的Actions选项卡手动触发此工作流
+      - main
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   # 设置GITHUB_TOKEN的权限，以允许部署到GitHub Pages
