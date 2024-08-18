@@ -76,7 +76,7 @@ params:
             adminLabel: 
 
         utterances:
-            repo: lulaide.github.io
+            repo: lulaide/lulaide.github.io
             issueTerm: pathname
             label: comment
 
