@@ -7,6 +7,7 @@ tags = [
     "v2ray",
     "v2raya"
 ]
+categories = ["教程&文档"]
 image = "image.png"
 +++
 
