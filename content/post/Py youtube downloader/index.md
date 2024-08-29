@@ -25,7 +25,7 @@ pip install yt-dlp
 
 ## 终端下载视频的简易方法
 
-- 使用-F参数获取视频信息
+- 使用`-F`参数获取视频信息
 ```bash
 yt-dlp -F https://www.youtube.com/shorts/j9ank-HGDoI
 ```
@@ -64,12 +64,13 @@ sb0     mhtml 50x90        1    │                   mhtml │ images          
 ```
 
 - 查看视频信息，选择下载的视频，记住对应的`ID`
-比如我要下载
+  - 比如我要下载
 ```
 ID      EXT   RESOLUTION FPS CH │    FILESIZE   TBR PROTO │ VCODEC          VBR ACODEC      ABR ASR MORE INFO
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 617     mp4   1080x1920   60    │ ~  29.63MiB 5073k m3u8  │ vp09.00.41.08 5073k video only
 ```
+- 使用`-f`参数
 ```bash
 yt-dlp -f 617 https://www.youtube.com/shorts/j9ank-HGDoI
 ```
