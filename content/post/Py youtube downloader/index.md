@@ -12,7 +12,7 @@ image = "image.png"
 +++
 
 >此文章简单分享一个功能齐全的 YouTube 下载器，以及如何在终端使用它
-### `yt-dlp`项目
+## `yt-dlp`项目
 
 - 项目地址：
 ```
@@ -23,7 +23,7 @@ https://github.com/yt-dlp/yt-dlp
 pip install yt-dlp
 ```
 
-### 终端下载视频的简易方法
+## 终端下载视频的简易方法
 
 - 使用-F参数获取视频信息
 ```bash
