@@ -29,6 +29,7 @@ pip install yt-dlp
 ```bash
 yt-dlp -F https://www.youtube.com/shorts/j9ank-HGDoI
 ```
+- 输出如下
 ```
 ID      EXT   RESOLUTION FPS CH │    FILESIZE   TBR PROTO │ VCODEC          VBR ACODEC      ABR ASR MORE INFO
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -72,7 +73,7 @@ ID      EXT   RESOLUTION FPS CH │    FILESIZE   TBR PROTO │ VCODEC          
 ```bash
 yt-dlp -f 617 https://www.youtube.com/shorts/j9ank-HGDoI
 ```
-一段时间后视频会下载完成
+- 一段时间后视频会下载完成
 ```
 [youtube] j9ank-HGDoI: Downloading m3u8 information
 [info] j9ank-HGDoI: Downloading 1 format(s): 617
