@@ -1,7 +1,9 @@
 baseurl: https://blog.lulaide.com/
 languageCode: en
 theme: hugo-theme-stack
-paginate: 5
+pagination:
+  pagerSize: 5
+
 title: Lulaide' blog
 copyright: Lulaide
 
