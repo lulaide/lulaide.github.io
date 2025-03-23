@@ -38,7 +38,9 @@ image = "image.png"
 echo `date`
 ```
 > 反引号和`$(cmd)`都能进行命令替换，shell先会执行和反引号内或括号内的命令，再执行外层命令
-
+### 命令分隔符绕过
+- `%0a`
+- `%0d`
 ### cat 绕过(命令绕过)
 - 使用 `echo` 读取
 ```bash
@@ -108,6 +110,8 @@ Payload:
 ### 空格绕过
 - 使用 `${IFS}`
 - 使用 `<` 输入重定向
+- `{cat,/etc/passwd}`
+- `ls%09-al%09/home` 制表符ASCII码
 - 如果能回现报错，就可以使用`$(<filename)`
 ![](image-3.png)
 
