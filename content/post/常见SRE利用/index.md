@@ -5,7 +5,8 @@ date = "2025-03-23"
 description = "RCE常见攻击点和利用方法"
 tags = [
     "渗透",
-    "Linux"
+    "Linux",
+    "CTF"
 ]
 categories = ["教程&文档"]
 image = "image.png"
