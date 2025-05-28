@@ -109,10 +109,10 @@ Payload:
 ```
 ![](image-7.png)
 ### 空格绕过
-- 使用 `${IFS}`
-- 使用 `<` 输入重定向
+- 使用 `${IFS}`, `$IFS$1`
+- 使用 `<` 输入重定向, `<>`
 - `{cat,/etc/passwd}`
-- `ls%09-al%09/home` 制表符ASCII码
+- `%09` 制表符ASCII码
 - 如果能回现报错，就可以使用`$(<filename)`
 ![](image-3.png)
 
